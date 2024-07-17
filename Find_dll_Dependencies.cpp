@@ -8,6 +8,7 @@
 
 std::set<std::string> visitedPaths;
 std::set<std::string> allDependencies;
+std::set<std::string> missingDependencies;
 
 std::string GetFileName(const std::string& path) {
     size_t pos = path.find_last_of("\\/");
@@ -77,8 +78,12 @@ void FindAllDependencies(const std::string& filePath) {
 
     for (const auto& dependency : dependencies) {
         std::string dependencyPath = GetFullPath(dependency);
-        if (!dependencyPath.empty() && visitedPaths.find(dependencyPath) == visitedPaths.end()) {
-            FindAllDependencies(dependencyPath);
+        if (!dependencyPath.empty()) {
+            if (visitedPaths.find(dependencyPath) == visitedPaths.end()) {
+                FindAllDependencies(dependencyPath);
+            }
+        } else {
+            missingDependencies.insert(dependency); // Add missing DLL to set
         }
     }
 }
@@ -98,8 +103,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    std::cout << "Found dependencies:" << std::endl;
     for (const auto& path : allDependencies) {
         std::cout << path << std::endl;
+    }
+
+    std::cout << "\nMissing dependencies:" << std::endl;
+    for (const auto& missing : missingDependencies) {
+        std::cout << missing << std::endl;
     }
 
     return 0;
